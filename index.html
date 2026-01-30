@@ -124,9 +124,17 @@
         </div>
 
         <div style="margin-top: 40px; border-top: 2px solid #333; padding-top: 10px; display: grid; grid-template-columns: 1fr 1fr; gap: 40px;">
-            <div><label>Client Signature(顾客签名):</label><div style="height:40px; border-bottom:1px solid #000;"></div></div>
+            <div>
+                <label>Client Signature(顾客签字):</label>
+                <div style="border: 1px solid #333; background: #fff; width: 300px; display: inline-block;">
+                    <canvas id="sigCanvas" width="300" height="80" style="cursor: crosshair; touch-action: none;"></canvas>
+                </div>
+                <br>
+                <button onclick="clearSignature()" style="font-size: 10px; cursor: pointer;">Clear Signature</button>
+            </div>
             <div><label>YCM Acknowledgment(YCM签名):</label><div style="height:40px; border-bottom:1px solid #000;"></div></div>
         </div>
+        
     </div>
 
     <script>
@@ -215,6 +223,59 @@
             // Update Chart
             radarChart.data.datasets[0].data = [s1_avg, s2_avg, s3_avg];
             radarChart.update();
+        }
+                    // --- SIGNATURE PAD LOGIC ---
+            const canvas = document.getElementById('sigCanvas');
+            const ctx = canvas.getContext('2d');
+            let drawing = false;
+            
+            // Setup styling
+            ctx.lineWidth = 2;
+            ctx.lineCap = 'round';
+            ctx.strokeStyle = '#000000';
+            
+            // 1. Mouse Events (Desktop)
+            canvas.addEventListener('mousedown', (e) => {
+                drawing = true;
+                ctx.beginPath();
+                ctx.moveTo(e.offsetX, e.offsetY);
+            });
+            
+            canvas.addEventListener('mousemove', (e) => {
+                if (drawing) {
+                    ctx.lineTo(e.offsetX, e.offsetY);
+                    ctx.stroke();
+                }
+            });
+            
+            canvas.addEventListener('mouseup', () => drawing = false);
+            canvas.addEventListener('mouseout', () => drawing = false);
+            
+            // 2. Touch Events (Mobile/Tablet)
+            canvas.addEventListener('touchstart', (e) => {
+                e.preventDefault(); // Stop scrolling while signing
+                drawing = true;
+                const touch = e.touches[0];
+                const rect = canvas.getBoundingClientRect();
+                ctx.beginPath();
+                ctx.moveTo(touch.clientX - rect.left, touch.clientY - rect.top);
+            });
+            
+            canvas.addEventListener('touchmove', (e) => {
+                e.preventDefault();
+                if (drawing) {
+                    const touch = e.touches[0];
+                    const rect = canvas.getBoundingClientRect();
+                    ctx.lineTo(touch.clientX - rect.left, touch.clientY - rect.top);
+                    ctx.stroke();
+                }
+            });
+            
+            canvas.addEventListener('touchend', () => drawing = false);
+            
+            // 3. Clear Function
+            function clearSignature() {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
         }
     </script>
 </body>
